@@ -13,9 +13,14 @@ export const Google = {
       "https://www.googleapis.com/auth/userinfo.email",
       "https://www.googleapis.com/auth/userinfo.profile",
     ],
+    redirect_uri: 'https://localhost:3000/login'
   }),
   logIn: async (code: string) => {
-    const { tokens } = await auth.getToken(code);
+    const { tokens } = await auth.getToken({
+      code,
+      redirect_uri: 'https://localhost:3000/login'
+    });
+    console.log(tokens);
     auth.setCredentials(tokens);
     const { data } = await google.people({ version: "v1", auth }).people.get({
       resourceName: "people/me",

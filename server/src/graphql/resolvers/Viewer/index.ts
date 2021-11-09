@@ -10,66 +10,72 @@ const logInViaGoogle = async (
   token: string,
   db: Database
 ): Promise<User | null> => {
-  const { user } = await Google.logIn(code);
+  try {
+    const { user } = await Google.logIn(code);
+    if (!user) {
+      throw new Error("Google login error");
+    }
 
-  if (!user) {
-    throw new Error("Google login error");
-  }
+    // Names/Photos/Email Lists
+    const userNamesList = user.names && user.names.length ? user.names : null;
+    const userPhotosList =
+      user.photos && user.photos.length ? user.photos : null;
+    const userEmailsList =
+      user.emailAddresses && user.emailAddresses.length
+        ? user.emailAddresses
+        : null;
 
-  // Names/Photos/Email Lists
-  const userNamesList = user.names && user.names.length ? user.names : null;
-  const userPhotosList = user.photos && user.photos.length ? user.photos : null;
-  const userEmailsList =
-    user.emailAddresses && user.emailAddresses.length
-      ? user.emailAddresses
-      : null;
+    // User Display Name
+    const userName = userNamesList ? userNamesList[0].displayName : null;
+    // User Id
+    const userId = userNamesList?.[0].metadata?.source?.id;
 
-  // User Display Name
-  const userName = userNamesList ? userNamesList[0].displayName : null;
-  // User Id
-  const userId = userNamesList?.[0].metadata?.source?.id;
+    // User Avatar
+    const userAvatar = userPhotosList?.[0]?.url;
 
-  // User Avatar
-  const userAvatar = userPhotosList?.[0]?.url;
+    // User Email
+    const userEmail = userEmailsList?.[0]?.value;
 
-  // User Email
-  const userEmail = userEmailsList?.[0]?.value;
+    if (!userId || !userName || !userAvatar || !userEmail) {
+      throw new Error("Google login error");
+    }
 
-  if (!userId || !userName || !userAvatar || !userEmail) {
-    throw new Error("Google login error");
-  }
+    const updateRes = await db.users.findOneAndUpdate(
+      { _id: userId },
+      {
+        $set: {
+          name: userName,
+          avatar: userAvatar,
+          contact: userEmail,
+          token,
+        },
+      },
+      { returnOriginal: false }
+    );
 
-  const updateRes = await db.users.findOneAndUpdate(
-    { _id: userId },
-    {
-      $set: {
+    let viewer = updateRes.value;
+
+    if (!viewer) {
+      const insertResult = await db.users.insertOne({
+        _id: userId,
+        token,
         name: userName,
         avatar: userAvatar,
         contact: userEmail,
-        token,
-      },
-    },
-    { returnOriginal: false }
-  );
+        income: 0,
+        bookings: [],
+        listings: [],
+      });
 
-  let viewer = updateRes.value;
+      viewer = insertResult.ops[0];
+    }
 
-  if (!viewer) {
-    const insertResult = await db.users.insertOne({
-      _id: userId,
-      token,
-      name: userName,
-      avatar: userAvatar,
-      contact: userEmail,
-      income: 0,
-      bookings: [],
-      listings: [],
-    });
+    return viewer || null;
+  } catch (error) {
+    console.error(error);
 
-    viewer = insertResult.ops[0];
+    throw new Error("Google login error");
   }
-
-  return viewer || null;
 };
 
 export const viewerResolvers: IResolvers = {
