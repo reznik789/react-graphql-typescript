@@ -8,7 +8,7 @@ import {
   ViewerProviderProps,
 } from "./types";
 
-const ViewerStateContext = React.createContext<{ state: State } | undefined>(
+const ViewerStateContext = React.createContext<{ viewer: Viewer } | undefined>(
   undefined
 );
 
@@ -40,7 +40,7 @@ export const ViewerProvider = ({ children }: ViewerProviderProps) => {
     viewer: initialViewer,
   });
   return (
-    <ViewerStateContext.Provider value={{ state }}>
+    <ViewerStateContext.Provider value={{ ...state }}>
       <ViewerDispatchContext.Provider value={{ dispatch }}>
         {children}
       </ViewerDispatchContext.Provider>
@@ -49,7 +49,7 @@ export const ViewerProvider = ({ children }: ViewerProviderProps) => {
 };
 
 export const useViewerState = () => {
-  const context = React.useContext<{state: State} | undefined>(ViewerStateContext);
+  const context = React.useContext<{viewer: Viewer} | undefined>(ViewerStateContext);
   if (context === undefined) {
     throw new Error("useViewerState must be used within a ViewerProvider");
   }

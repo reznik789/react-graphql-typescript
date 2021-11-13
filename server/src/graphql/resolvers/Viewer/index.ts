@@ -115,7 +115,7 @@ export const viewerResolvers: IResolvers = {
       }
     },
     logOut: () => {
-      return "Mutation.logOut";
+      return { didRequest: true };
     },
   },
   Viewer: {

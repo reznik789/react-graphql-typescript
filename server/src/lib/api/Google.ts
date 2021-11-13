@@ -20,7 +20,6 @@ export const Google = {
       code,
       redirect_uri: 'https://localhost:3000/login'
     });
-    console.log(tokens);
     auth.setCredentials(tokens);
     const { data } = await google.people({ version: "v1", auth }).people.get({
       resourceName: "people/me",
