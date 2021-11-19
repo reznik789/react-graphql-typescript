@@ -15,7 +15,7 @@ export const MenuItems: React.FC = () => {
   const { dispatch } = useViewerDispatch();
   const [logOut] = useMutation<LogOutData>(LOG_OUT, {
     onCompleted: (data) => {
-      if (!data?.logOut) return;
+      if (!(data?.logOut)) return;
       dispatch({
         type: ViewerActionTypes.SetViewer,
         payload: data.logOut,
